@@ -1,0 +1,479 @@
+#!/usr/bin/python
+# Script that goes onto eclass and crowdmark.
+# Then Checks vs old data, and saves to excel
+# This Script test if web can go direct to each grade id, bypassing the need for stupid grade click.
+# Less need to change
+# Maybe add percent sign after alignments
+
+# Import variables
+import selenium
+from selenium.webdriver.common.by import By  # For wait until find 'by' condition
+from selenium.webdriver.support.ui import WebDriverWait  # Wait condition
+from selenium.webdriver.support import expected_conditions as ec
+
+import math
+import string  # For list of letters
+import tkinter as tk
+from tkinter import messagebox
+
+import pandas as pd
+import os  # For opening Excel file
+
+# Define driver
+driver = selenium.webdriver.Chrome('C:/Users/parno/AppData/Local/Programs/Python/Python38/Scripts/chromedriver.exe')
+web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
+crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
+
+# Global Variables
+# Course list to call function
+course_id = {'EN PH 131': '56744', 'EN PH 131 LAB': '56912', 'ENCMP 100 LEC': '57932',
+             'ENCMP 100 LAB': '56378', 'CHEM 105': '58028', 'ENGG 160': '57089', 'MATH 101 LEC': '58079',
+             'MATH 101 LAB': '58102', 'MATH 102': '57483', 'MATH 102 LAB': '57479'}
+crowd_course = {'MATH 102 Wi20': 'math-102-wi20-applied-linear-algebra-combined-lec-wi20', 'MATH 101 Wi20':
+                'math-101-wi20-calculus-ii-combined-lec-wi20'}
+
+# What to print if not marked
+not_marked = "N M"
+not_marked_yet = "Not M Yet"
+
+# Dictionaries for Holding grade and percentage outputs
+dict_grades = {}
+dic_out_of = {}
+dict_percent = {}
+
+# list of all courses with changed grades
+changed_course = {}
+
+# Loads old Grades to dict
+file = 'C:/Users/parno/PycharmProjects/WebAnna/GradeList.xlsx'  # File location of Spreadsheet
+read = pd.read_excel(file)
+
+old_percent = read.to_dict('list')
+
+# username / password stored in environment variables
+usr = os.environ.get('ualberta_usr')
+psw = os.environ.get('ualberta_pass')
+crowd_usr = os.environ.get('crowd_usr')
+crowd_pass = os.environ.get('crowd_pass')
+
+# Logging on
+driver.get(web_link + course_id['EN PH 131'])
+driver.find_element_by_id('username').send_keys(usr)
+driver.find_element_by_id('user_pass').send_keys(psw)
+driver.find_element_by_xpath('/html/body/div/div/div/div/div/form/input[3]').click()
+# Tests if eclass loads
+eclass_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, "Dashboard"))
+WebDriverWait(driver, 10).until(eclass_load)
+
+
+# loads web-driver initially
+async def load_eclass(link):
+    # opens new instances when things updated
+    drive = selenium.webdriver.Chrome('C:/Users/parno/AppData/Local/Programs/Python/Python38/Scripts/chromedriver.exe')
+    # Logging on
+    drive.get(link)
+    drive.find_element_by_id('username').send_keys(usr)
+    drive.find_element_by_id('user_pass').send_keys(psw)
+    drive.find_element_by_xpath('/html/body/div/div/div/div/div/form/input[3]').click()
+    # Tests if eclass loads
+    eclass_loaded = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, "Dashboard"))
+    WebDriverWait(driver, 10).until(eclass_loaded)
+
+
+async def load_crowd(link):
+
+    drive = selenium.webdriver.Chrome('C:/Users/parno/AppData/Local/Programs/Python/Python38/Scripts/chromedriver.exe')
+    drive.get(link)
+    drive.find_element_by_id('user_email').send_keys(crowd_usr)
+    drive.find_element_by_id('user_password').send_keys(crowd_pass)
+    drive.find_element_by_xpath('/html/body/section/main/section/div/div[1]/form/div/input').click()
+
+
+# Finding Grades
+# Change To find column: ie change empty variables
+def find_grades(course):
+    ind = 0  # Increments evey data row
+    rmv_feedback = 0
+    possible = []
+    grade = []
+
+    # Finds Table data points
+    li = driver.find_elements_by_tag_name('td')
+    for g in li:
+        g = g.text
+
+        # Removes text for feedback column
+        if len(g) >= 1:
+            rmv_feedback += 1
+        if rmv_feedback % 3 == 0:
+            g = ''
+
+        if g != '' and g != ' ':  # Checks if element is blank
+            ind += 1  # Increments indexes only after removing blank
+
+            # Adds out of mark
+            if course == 'EN PH 131 LAB':
+                mod = 3
+            else:
+                mod = 2
+            if ind % mod == 0:
+                pos = g.split('–')  # Looks at second value in grade_2 range
+                if len(pos) == 2:  # Only looks if split is viable
+                    possible.append(pos[1])
+                else:
+                    possible.append('–')  # Will return not marked in two blocks
+            else:
+                grade.append(g)
+
+    format_course(course, grade, possible)  # calls function for rand courses
+    percent = percent_cal(grade, possible)  # calls percent function
+    return grade, possible, percent  # Returns the grades calculated in the function
+
+
+# Removes redundant grades for specific courses.
+def format_course(course, grades, pos):
+    # only adds final grades from lab
+    if course == 'EN PH 131 LAB':
+        for ass_num in range(len(pos)):
+
+            # Only takes third grade
+            if (ass_num - 1) % 3 != 0:  # since index is zero; so n+1, but ignore first 2
+                grades[ass_num] = "$"  # Value that can be removed
+                pos[ass_num] = "$"
+
+        grades.remove('$')  # removes the extra superfluous grades
+        pos.remove('$')
+
+    # Only adds midterm grades
+    elif course == 'ENCMP 100 LEC':
+        for ass_num in range(len(pos) - 1):
+
+            if ass_num != 4 and ass_num != 5:  # Row number - 1
+                grades[ass_num] = "$"  # Value that can be removed
+                pos[ass_num] = "$"
+
+        grades.remove('$')  # removes the extra superfluous grades
+        pos.remove('$')
+
+    elif course == 'ENCMP 100 LAB':  # Not Working yet
+        for ass_num in range(len(pos)):
+            try:
+                float(pos[ass_num])
+            except ValueError:
+                grades[ass_num] = "$"  # Value that can be removed
+                pos[ass_num] = "$"
+        grades.remove('$')  # removes the extra superfluous grades
+        pos.remove('$')
+
+
+# Percentage calculation
+def percent_cal(grade_2, pos2):
+    # Local Variables
+    percent = []
+    ass_len = len(pos2) - 1  # Number of assignments
+
+    if ass_len == 0:  # so range works when only one assignment
+        per = str((float(grade_2[0]) / float(pos2[0])) * 100)  # Calculates Percentage
+        percent.append(per)
+
+    else:
+        for cal in range(ass_len):
+            # Checks if the value is marked
+            if pos2[cal] == '' or pos2[cal] == '–':
+                pos2[cal] = not_marked
+
+            else:
+                # Returns "Not marked" unless a value is given.
+                # Else calculates percent for that assignment
+                if grade_2[cal] == '-' or grade_2[cal] == '–':
+                    grade_2[cal] = not_marked_yet
+                    per = grade_2[cal]
+                    percent.append(per)
+                elif pos2[cal] != '$' and grade_2[cal] != '$':
+                    per = str((float(grade_2[cal]) / float(pos2[cal])) * 100)
+                    percent.append(per)
+
+    return percent
+
+
+# Changes grade column index for crowdmark tests
+def crowd_test(table, mod):  # Mod is modulus
+
+    crowd_percent = []
+    ass_crowd = 0  # Number of assignments
+
+    for g in table:  # Changes to text
+        g = g.text
+        ass_crowd += 1
+
+        if ass_crowd % mod == 0:  # Returns 4th column
+            if g != '' and g != '—':
+                g_per = g.split("%")  # Removes percent sign
+                crowd_percent.append(g_per[0])
+            else:
+                crowd_percent.append(not_marked_yet)
+
+    return crowd_percent
+
+
+# Crowdmark change for course.
+def crowd_change(course):
+    # direct link for faster operation
+    driver.get(crowd_link + course)
+    WebDriverWait(driver, 10).until(g_load)
+
+    # Local Variables
+    table_percent = []
+    num = 0
+
+    # Changes index for grades if test or assignment
+    tables = driver.find_elements_by_tag_name('table')
+
+    if len(tables) == 1:  # Gos directly to assignments if no tests
+        data_val = 4
+        table_data = tables[0].find_elements_by_tag_name('td')
+        table_percent = crowd_test(table_data, data_val)
+
+    else:
+        for table_id in tables:  # Looks for table data in each table
+            table_data = table_id.find_elements_by_tag_name('td')
+            num += 1
+
+            # Goes to tests for first table, and assignments for second.
+            if num == 1:
+                data_val = 3
+
+            else:
+                data_val = 4
+
+            # Gets percent from tests then percent from assignments
+            crowd_per = crowd_test(table_data, data_val)
+            table_percent += crowd_per
+
+    return table_percent
+
+
+# Gets dictionary of old courses
+def get_old_percent(course):
+    o_course_list = old_percent[course]
+
+    for g in range(len(o_course_list)):
+        # Tests if value is a num
+        if isinstance(o_course_list[g], float):
+
+            # Tests if value is a place holder: Nan
+            if math.isnan(o_course_list[g]):
+                o_course_list[g] = "$"  # Replaces with a easy to remove character
+            else:
+                o_course_list[g] = str(o_course_list[g])
+
+        else:
+            o_course_list[g] = o_course_list[g].split("%")
+
+    # Removes characters
+    for g in o_course_list[:]:
+        if g == "$":
+            o_course_list.remove(g)
+
+
+# Checks if any grades updated
+def any_updates(update):
+    # Two old grades since list of lists need to be removed
+    old_grades = []
+    old_grade_temp = old_percent[update]
+    new_grade = dict_percent[update]
+
+    # So % can be printed
+    cent = "%"
+
+    # Converts to string and saves into final list
+    for og in old_grade_temp:
+        if isinstance(og, str):  # Keeps strings unaltered
+            old_grades.append(og)
+        else:
+            old_grades.append(og[0])
+
+    # Do this if they might be the same
+    if len(old_grades) == len(new_grade):
+
+        for i in range(len(old_grades)):
+            output_str = "Course: {}, Assignment: {}, Old percentage: {}, New percentage: {}{}".format(update,
+                                                                                                       str(i + 1),
+                                                                                                       old_grades[i],
+                                                                                                       new_grade[i],
+                                                                                                       cent)
+            if old_grades[i] != new_grade[i]:  # Checks if that grade is updated
+
+                if new_grade[i] == not_marked_yet or new_grade[i] == not_marked:
+                    cent = ''  # Corrects grammar: no % if not marked
+                if update in changed_course.keys():
+                    changed_course[update].append(output_str)
+                else:
+                    changed_course[update] = [output_str]
+                #       % (update, str(i + 1), old_grades[i], new_grade[i], cent)
+                # print("Grade Changed, Course: %s, Assignment: %s, Old percentage: %s, New percentage: %s%s"
+                #       % (update, str(i + 1), old_grades[i], new_grade[i], cent))
+
+    # They are guaranteed different. Thus print all new indexes
+    else:
+        # is_same = False
+        # Prints the indexes that were not on old index
+        dif_len = len(new_grade) - len(old_grades)
+
+        for i in range(dif_len):
+            up_in = i + len(old_grades)  # index for new grade
+            output_str = "Grade Changed, Course: {}, Assignment: {}, New percentage: {}{}".format(update, str(up_in),
+                                                                                                  new_grade[up_in],
+                                                                                                  cent)
+
+            if update in changed_course.keys():
+                changed_course[update].append(output_str)
+            else:
+                changed_course[update] = [output_str]
+            # print("Grade Changed, Course: %s, Assignment: %s, New percentage: %s%s"
+            #       % (update, str(up_in), new_grade[up_in], cent))
+
+
+# Calls functions for chancing course, and getting grades for each course.
+for c in course_id.keys():
+
+    if c != 'EN PH 131':  # Since first link
+
+        g_link = web_link + course_id[c]
+        driver.get(g_link)  # Switch courses
+
+    # Saves output as local variable
+    course_g, course_o, course_p = find_grades(c)
+
+    dict_grades[c] = course_g
+    dic_out_of[c] = course_o
+    dict_percent[c] = course_p
+
+# Crowdmark part
+# Element locators for wait function
+c_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, "My Courses"))  # Main Crowdmark page
+g_load = ec.presence_of_element_located((By.TAG_NAME, 'td'))  # grade tables
+math_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, 'A1-Crowdmark'))
+
+# crowdmark loading
+driver.get('https://app.crowdmark.com/sign-in')
+driver.find_element_by_id('user_email').send_keys(crowd_usr)
+driver.find_element_by_id('user_password').send_keys(crowd_pass)
+driver.find_element_by_xpath('/html/body/section/main/section/div/div[1]/form/div/input').click()
+
+
+# Crowdmark calling function
+for c in crowd_course.keys():  # Grabs id
+    percent_crowd = crowd_change(crowd_course[c])
+
+    # Reveres Crowdmark's stupid ordering and appends to percent dict
+    percent_crowd.reverse()
+    dict_percent[c] = percent_crowd
+
+# Quits Web browser
+driver.quit()
+
+# 2 Variables since one will change, but if there has been a change, then second will hold value.
+# up_to_date = True
+
+# Calls function for any updates; for each course
+for c in course_id.keys():
+
+    # Only runs is old dict is updated. Else updates
+    # will send message block at end
+    if c in old_percent.keys():
+        get_old_percent(c)  # Calls up old grades
+        any_updates(c)  # True/false for each course
+
+        # # Holds false value
+        # if not same:
+        #     up_to_date = False
+
+    else:
+        changed_course[c] = []
+
+
+# Only prints once tells message box what to say
+async def out_put():
+    for d in changed_course.keys():  # loops through every updated course
+        print("Course Changed: ", d)  # prints course name
+
+        # is course in eclass; then loads website
+        if d in course_id.keys():
+            await load_eclass(web_link + course_id[d])
+
+        else:
+            await load_crowd(crowd_link + crowd_course[d])
+
+        # prints new grads
+        for m in changed_course[d]:
+            print(m)
+
+
+if len(changed_course) == 0:
+    mes = "Nothing Updated"
+
+# prompts message box to alert updates
+else:
+    mes = "Grades Changed"
+    out_put()
+
+# Excel formatting
+# Padding the dicts so that all are same length to print
+lmax = 0
+
+# Finds longest list of grades
+for n in dict_percent.keys():
+    lmax = max(lmax, len(dict_percent[n]))
+
+# Sets all other courses to have same length: with empty str
+for n in dict_percent.keys():
+    leng = len(dict_percent[n])
+
+    if leng < lmax:
+        dict_percent[n] += [""] * (lmax - leng)
+
+# Outputs to file
+df = pd.DataFrame(data=dict_percent)  # Selects Data
+writer = pd.ExcelWriter(file, engine='xlsxwriter')  # Creates writing object
+df.to_excel(writer, index=False, sheet_name='Percentages')
+
+# Names sheet
+ws = writer.sheets['Percentages']
+
+# String of letters for excel cell formatting
+let_str = string.ascii_uppercase  # String of letters
+col_str = []
+# Creates cell string
+for x in let_str:
+    l_com = x + ":" + x
+    col_str.append(l_com)
+
+# Length of class name for excel
+name_len = []
+
+# Adds length for normal courses.
+for name in course_id:
+    name_len.append(len(name))
+
+for na in crowd_course:
+    name_len.append(len(na))
+
+# Formats cells for each courses
+workbook = writer.book
+for_mat = workbook.add_format({'num_format': '0.00%'})
+
+# sets each column to be the correct with
+for x in range(len(name_len)):
+    ws.set_column(col_str[x], (name_len[x] + 2), for_mat)
+
+# Saves to excel
+writer.save()
+
+# Opens SpreadSheet
+os.startfile(file)  # Opens excel file
+
+# Puts message box on top
+root = tk.Tk()
+root.attributes("-topmost", True)
+messagebox.showinfo("Updates", mes)
