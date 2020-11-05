@@ -1,8 +1,0 @@
-# crontab file...
-# Updates momthly
-0 0 1 * * sudo apt-get -y update && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install ./google-chrome-stable_current_amd64.deb && wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && sudo mv chromedriver /usr/bin/chromedriver && sudo chown root:root /usr/bin/chromedriver && sudo chmod +x /usr/bin/chromedriver
-
-# For python
-0 0,6,12,18 * * * /home/arno/anaconda3/envs/GradeTest/bin/python /home/arno/anaconda3/envs/Ualberta-Eclass-Grade-Grab/GradeGrab.py
-# weekly log
-0 0 * * 0 /home/arno/anaconda3/envs/GradeTest/bin/python /home/arno/anaconda3/envs/Ualberta-Eclass-Grade-Grab/LogClear.py
