@@ -24,7 +24,7 @@ import logging
 # Global Variables
 # locations
 web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
-file = '/home/arno/anaconda3/envs/Ualberta-Eclass-Grade-Grab/Grades.csv'  # File location of Spreadsheet
+file = 'Grades.csv'  # File location of Spreadsheet
 crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
 
 # users & passwords
