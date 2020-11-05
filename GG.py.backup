@@ -26,18 +26,21 @@ import logging
 web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
 file = '/home/arno/anaconda3/envs/Ualberta-Eclass-Grade-Grab/Grades.csv'  # File location of Spreadsheet
 crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
-ch_path = '/home/arno/anaconda3/envs/Ualberta-Eclass-Grade-Grab/chromedriver'  # path to chromedriver
 
 # users & passwords
-usr = 'pclaasse'
-psw = 'uHi2u4me3war44&pi'
-c_usr = 'pclaasse@ualberta.ca'  # crowdmark usr
-c_psw = 'Hi2u4me3war44&pi'  # crowdmark password
+# users & passwords opens file then saves them
+usr_f = open('UsrInfo.txt', 'r')
+lines = usr_f.readlines()
+usr = lines[2]
+psw = lines[4]
+c_usr = lines[6]  # crowdmark usr
+c_psw = lines[8]  # crowdmark password
 
 # for email credentials
-user = "pythonclassencs@gmail.com"
-password = "kwghqszkjfeeymmm"
-receivers = "parnoclaassens@gmail.com"
+user = lines[10]
+password = lines[14]
+receivers = lines[12]
+usr_f.close()
 
 # Course list to call function
 course_id = {'CIV E 270 Lec': '63547', 'CIV E 270 Lab': '64807', 'CH E 243 Lec': '62226', 'Ch E 243 Sem': '64632',
@@ -419,7 +422,7 @@ except Exception as e:
 
 try:
     logging.info('Logging onto web')
-    driver = selenium.webdriver.Chrome(options=options)  #  executable_path = ch_path
+    driver = selenium.webdriver.Chrome(options=options) 
     # Logging on
     print('Getting Web Data')
     driver.get(web_link + c_l[0])
