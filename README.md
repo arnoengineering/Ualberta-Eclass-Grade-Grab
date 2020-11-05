@@ -2,6 +2,11 @@
 Grabs grades from ualberta eclass
 
 Imput your class names and id in the dictionaries in 'GradeGrab.py'.
+
+the sending email works with google api and works beter with 2 factor authentcation
+[Create App Key](https://support.google.com/accounts/answer/185833?hl=en&authuser=2)
+put this in for api password for email
+
 Replace info in 'UserInfo.txt' 
 with your respective usernames and passwords.
 
