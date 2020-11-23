@@ -9,6 +9,7 @@ To send the email, I used the *smtplib* module with google api. Thus, the sendin
 [Create App Key](https://support.google.com/accounts/answer/185833?hl=en&authuser=0)
 
 ## Replace info in 'UserInfo.txt' 
+remove '.example'
 with your respective usernames and passwords. The email pasword is the api *app password* in the above step.
 
 # Info
