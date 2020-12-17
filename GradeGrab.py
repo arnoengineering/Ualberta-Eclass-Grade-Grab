@@ -13,6 +13,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.chrome.options import Options
 
 import math
+import os
+import sys
 
 import pandas as pd
 import smtplib
@@ -22,8 +24,9 @@ import logging
 
 # Global Variables
 # locations
+os.chdir(os.path.dirname(sys.argv[0]))
 web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
-file = '/home/arno/anaconda3/envs/Ualberta-Eclass-Grade-Grab/Grades.csv'  # File location of Spreadsheet
+file = 'Grades.csv'  # File location of Spreadsheet
 crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
 
 # users & passwords
