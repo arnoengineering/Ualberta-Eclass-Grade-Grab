@@ -14,11 +14,13 @@ copy file: remove'.example' from file name and replace all non comments with you
 # Info
 ## Dependancys
 This program has a few dependancies
-1.Anaconda
-  1.Pandas
-2.Selenium
-  1.Chrome
-  2.Chromedriver
+
+- Anaconda
+    - Pandas
+- Selenium
+    - Chrome
+    - Chromedriver
+    
 This program uses pandas, so it should be run by anaconda.
 [Using and Installer](https://www.anaconda.com/products/individual)
 [For linux terminal](https://docs.anaconda.com/anaconda/install/linux/)
