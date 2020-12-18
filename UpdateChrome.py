@@ -27,13 +27,15 @@ def url_get(url):
 ch_drive_url += url_get(ch_drive_url + 'LATEST_RELEASE') + 'chromedriver_linux64.zip'
 
 ch_cmd = """wget {}
-            sudo apt install ./google-chrome-stable_current_amd64.deb""".format(ch_url)
+            sudo apt install ./google-chrome-stable_current_amd64.deb
+            """.format(ch_url)
 
 drive_cmd = """wget {}
 unzip chromedriver_linux64.zip
 sudo mv chromedriver /usr/bin/chromedriver
 sudo chown root:root /usr/bin/chromedriver
-sudo chmod +x /usr/bin/chromedriver""".format(ch_drive_url)
+sudo chmod +x /usr/bin/chromedriver
+""".format(ch_drive_url)
 
 
 system(ch_cmd)
