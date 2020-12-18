@@ -24,7 +24,7 @@ def url_get(url):
     return op
 
 
-ch_drive_url += url_get(ch_drive_url + 'LATEST_RELEASE') + 'chromedriver_linux64.zip'
+ch_drive_url += url_get(ch_drive_url + 'LATEST_RELEASE') + '/chromedriver_linux64.zip'
 
 ch_cmd = """wget {}
             sudo apt install ./google-chrome-stable_current_amd64.deb
@@ -37,6 +37,11 @@ sudo chown root:root /usr/bin/chromedriver
 sudo chmod +x /usr/bin/chromedriver
 """.format(ch_drive_url)
 
+# make sure format is correct
+print('Command 1: ', ch_cmd, '\n')
+print('Command 2: ', drive_cmd, '\n')
+con = input('Would you like to continue? [y,n]: ')
 
-system(ch_cmd)
-system(drive_cmd)
+if con.lower() == 'y' or con.lower() == 'yes':
+    system(ch_cmd)
+    system(drive_cmd)
