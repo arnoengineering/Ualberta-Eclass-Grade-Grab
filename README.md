@@ -2,7 +2,7 @@
 ## Grabs grades from ualberta eclass
 
 ## Add Classes
-Imput your class names and id in the dictionaries in *GradeGrab.py*. Last year I had some courses on croudmar, so I left the option and dicts in there.
+Imput your class names and id in the dictionaries in *GradeGrab.py*. Last year I had some courses on crowdmark, so I left the option and dicts in there.
 For eclass, the id is the last 6 digits of the URL: https:<span>//eclass.srv.ualberta.ca</span>/course/view.php?id=<ins>62226</ins> 
 
 To send the email, I used the *smtplib* module with google api. Thus, the sending email works better with 2 factor authentcation (and an api key).
@@ -34,7 +34,11 @@ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install ./google-chrome-stable_current_amd64.deb
 ```
 download latest chromedriver: [detailed explaination](https://tecadmin.net/setup-selenium-chromedriver-on-ubuntu/)
-You may need to change *2.41*, but i am not positive
+You should change *2.41*, im busy writing sdomething to fix this:
+
+get version:`curl https://chromedriver.storage.googleapis.com/LATEST_RELEASE`
+
+then run, replaceing *2.41* with the version returened by previous.
 ```
 wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip
 unzip chromedriver_linux64.zip
