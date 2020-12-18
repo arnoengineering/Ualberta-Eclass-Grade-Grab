@@ -9,16 +9,18 @@ To send the email, I used the *smtplib* module with google api. Thus, the sendin
 [Create App Key](https://support.google.com/accounts/answer/185833?hl=en&authuser=0)
 
 ## Replace info in 'UserInfo.txt' 
-remove '.example' from file name and replace all non comments with your respective usernames and passwords. The email pasword is the api *app password* in the above step.
+copy file: remove'.example' from file name and replace all non comments with your respective usernames and passwords. The email pasword is the api *app password* in the above step.
 
 # Info
 ## Dependancys
 This program has a few dependancies
-1.Anaconda
-  1.Pandas
-2.Selenium
-  1.Chrome
-  2.Chromedriver
+
+- Anaconda
+    - Pandas
+- Selenium
+    - Chrome
+    - Chromedriver
+    
 This program uses pandas, so it should be run by anaconda.
 [Using and Installer](https://www.anaconda.com/products/individual)
 [For linux terminal](https://docs.anaconda.com/anaconda/install/linux/)
@@ -55,7 +57,7 @@ To run main program 3 times/day and the program to check error file once per wee
 
 ```
 # For python
-0 0,6,12,18 * * * /path_to_annaconda_python /path_to_dir/GradeGrab.py
+0 0,6,12,18 * * * /path_to_annaconda_python/path_to_dir/GradeGrab.py
 # weekly log
-0 0 * * 0 /path_to_annaconda_python /path_to_dir/LogClear.py
+0 0 * * 0 /path_to_annaconda_python/path_to_dir/LogClear.py
 ```
