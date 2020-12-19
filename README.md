@@ -23,7 +23,7 @@ This program has a few dependancies
 - Selenium
     - Chrome
     - Chromedriver
--pycurl
+- pycurl
     
 This program uses pandas, so it should be run by anaconda.
 [Using and Installer](https://www.anaconda.com/products/individual)
@@ -72,7 +72,7 @@ To run main program 3 times/day and the program to check error file once per wee
 
 ```
 # For python
-0 0,6,12,18 * * * /path_to_annaconda_python/path_to_dir/GradeGrab.py
+0 0,6,12,18 * * * /path_to_annaconda_python /path_to_dir/GradeGrab.py
 # weekly log
-0 0 * * 0 /path_to_annaconda_python/path_to_dir/LogClear.py
+0 0 * * 0 /path_to_annaconda_python /path_to_dir/LogClear.py
 ```
