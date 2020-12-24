@@ -27,6 +27,7 @@ import logging
 self fix
 seperate file for email
 day of week
+function for web
  """
 # Global Variables
 # locations
