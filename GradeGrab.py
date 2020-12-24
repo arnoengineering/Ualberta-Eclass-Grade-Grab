@@ -22,6 +22,12 @@ import ssl
 from email.message import EmailMessage
 import logging
 
+# todo
+"""
+self fix
+seperate file for email
+day of week
+ """
 # Global Variables
 # locations
 os.chdir(os.path.dirname(sys.argv[0]))
@@ -72,163 +78,149 @@ options.headless = True
 
 
 # Functions
-# Removes redundant grades for specific courses.
-def format_course(course, grades, pos):
-    # only adds final grades from lab
-    if course == 'CIV E 270 Lec':
-        for ass_num in range(len(pos)):
+class CourseGrades:
+    def __init__(self):
+        self.grade = []
+        self.possible = []
+        self.percent = []
+        self.mod = 2  # can be mod in fmat
 
-            # Only takes third grade
-            if (ass_num + 1) != 1 and ass_num % 3 != 0:  # since index is zero; only keep 1 of each ass
-                grades[ass_num] = "$"  # Value that can be removed
-                pos[ass_num] = "$"
+    # Removes redundant grades for specific courses.
+    def format_course(self):  # todo fix for self
+        # todo add explain for format
+        # only adds final grades from lab
+        if self == 'CIV E 270 Lec':
+            for ass_num in range(len(self.possible)):
 
-        grades.remove('$')  # removes the extra superfluous grades
-        pos.remove('$')
+                # Only takes third grade
+                if (ass_num + 1) != 1 and ass_num % 3 != 0:  # since index is zero; only keep 1 of each ass
+                    self.grade[ass_num] = "$"  # Value that can be removed
+                    self.possible[ass_num] = "$"
 
-    # Only adds midterm grades
-    elif course == 'CIV E 270 Lab':
-        ass_l = []
-        for ass_num in range(len(pos)):
-            el = 'Section D1 - LABORATORY NO.{} SUBMISSION PORTAL'.format(ass_num + 1)
-            sec_d1 = driver.find_elements_by_tag_name('a')  # test if there is a link with ass_num
-            for d in sec_d1:
-                d = d.text
-                ass_l.append(d)
-            if el not in sec_d1:  # if not a link
-                grades[ass_num] = "$"  # Value that can be removed
-                pos[ass_num] = "$"
-        if '$' in grades:
-            grades.remove('$')  # removes the extra superfluous grades
-            pos.remove('$')
+        # Only adds midterm grades
+        elif self == 'CIV E 270 Lab':
+            ass_l = []
+            for ass_num in range(len(self.possible)):
+                el = 'Section D1 - LABORATORY NO.{} SUBMISSION PORTAL'.format(ass_num + 1)
+                sec_d1 = driver.find_elements_by_tag_name('a')  # test if there is a link with ass_num
+                for d in sec_d1:
+                    d = d.text
+                    ass_l.append(d)
+                if el not in sec_d1:  # if not a link
+                    self.grade[ass_num] = "$"  # Value that can be removed
+                    self.possible[ass_num] = "$"
 
-    elif course == 'MEC E 200':
-        for ass_num in range(len(pos)):
-            try:
-                float(pos[ass_num])  # test if float
-            except ValueError:
-                grades[ass_num] = "$"  # Value that can be removed
-                pos[ass_num] = "$"
-        grades.remove('$')  # removes the extra superfluous grades
-        pos.remove('$')
+        elif self == 'MEC E 200':
+            for ass_num in range(len(self.possible)):
+                try:
+                    float(self.possible[ass_num])  # test if float
+                except ValueError:
+                    self.grade[ass_num] = "$"  # Value that can be removed
+                    self.possible[ass_num] = "$"
 
-    elif course == 'STAT 235 Lec':  # Not Working yet
-        for ass_num in range(len(pos)):
-            if ass_num + 1 == 6 or ass_num + 1 == 12 or ass_num + 1 > 15:  # to remove assign total
-                grades[ass_num] = "$"  # Value that can be removed
-                pos[ass_num] = "$"
-        grades.remove('$')  # removes the extra superfluous grades
-        pos.remove('$')
+        elif self == 'STAT 235 Lec':  # Not Working yet
+            for ass_num in range(len(self.possible)):
+                if ass_num + 1 == 6 or ass_num + 1 == 12 or ass_num + 1 > 15:  # to remove assign total
+                    self.grade[ass_num] = "$"  # Value that can be removed
+                    self.possible[ass_num] = "$"
+        if '$' in self.grade:  # removes the extra superfluous grades
+            self.grade.remove('$')
+            self.possible.remove('$')
 
+    # Finding Grades
+    # Change To find column: ie change empty variables
+    def find_grades(self):
+        ind = 0  # Increments evey data row
+        rmv_feedback = 0
 
-# Finding Grades
-# Change To find column: ie change empty variables
-def find_grades(course):
-    ind = 0  # Increments evey data row
-    rmv_feedback = 0
-    possible = []
-    grade = []
+        # Finds Table data points
+        li = driver.find_elements_by_tag_name('td')
+        for g in li:
+            g = g.text
 
-    # Finds Table data points
-    li = driver.find_elements_by_tag_name('td')
-    for g in li:
-        g = g.text
+            # Removes text for feedback column
+            if len(g) >= 1:
+                rmv_feedback += 1
+            if rmv_feedback % 3 == 0:
+                g = ''
 
-        # Removes text for feedback column
-        if len(g) >= 1:
-            rmv_feedback += 1
-        if rmv_feedback % 3 == 0:
-            g = ''
+            if g != '' and g != ' ':  # Checks if element is blank
+                ind += 1  # Increments indexes only after removing blank
 
-        if g != '' and g != ' ':  # Checks if element is blank
-            ind += 1  # Increments indexes only after removing blank
-
-            # Adds out of mark
-            if course == 'EN PH 131 LAB':
-                mod = 3
-            else:
-                mod = 2
-            if ind % mod == 0:
-                pos = g.split('–')  # Looks at second value in grade_2 range
-                if len(pos) == 2:  # Only looks if split is viable
-                    possible.append(pos[1])
+                if ind % self.mod == 0:
+                    pos = g.split('–')  # Looks at second value in grade_2 range
+                    if len(pos) == 2:  # Only looks if split is viable
+                        self.possible.append(pos[1])
+                    else:
+                        self.possible.append('-')  # Will return not marked in two blocks
                 else:
-                    possible.append('-')  # Will return not marked in two blocks
-            else:
-                grade.append(g)
+                    self.grade.append(g)
 
-    format_course(course, grade, possible)  # calls function for rand courses
-    percent = percent_cal(course, grade, possible)  # calls percent function
-    return grade, possible, percent  # Returns the grades calculated in the function
+        self.format_course()  # calls function for rand courses
+        self.percent_cal()  # calls percent function
 
+    # Percentage calculation
+    def percent_cal(self):
+        ass_len = len(self.possible) - 1  # Number of assignments
 
-# Percentage calculation
-def percent_cal(course, grade_2, pos2):
-    # Local Variables '   ^`^s'
-    percent = []
-    ass_len = len(pos2) - 1  # Number of assignments
-
-    try:
-        if ass_len == 0:  # so range works when only one assignment
-            if pos2[0] == '' or pos2[0] == '-':
-                pos2[0] = not_marked
-            else:
-                # Returns "Not marked" unless a value is given.
-                # Else calculates percent for that assignment
-                if grade_2[0] == '-' or grade_2[0] == '-':
-                    grade_2[0] = not_marked_yet
-                    per = grade_2[0]
-                    percent.append(per)
-                elif pos2[0] != '$' and grade_2[0] != '$':
-                    per = str((float(grade_2[0]) / float(pos2[0])) * 100)
-                    percent.append(per)
-    except ValueError as er:
-        logging.exception('Error in percentage, class: {}, assignment:{}, error{}'.format(course, '1', str(er)))
-
-    else:
-        for cal in range(ass_len):
-            try:
-                # Checks if the value is marked
-                if pos2[cal] == '' or pos2[cal] == '-':
-                    pos2[cal] = not_marked
-
+        try:
+            if ass_len == 0:  # so range works when only one assignment
+                if self.possible[0] == '' or self.possible[0] == '-':
+                    self.possible[0] = not_marked
                 else:
                     # Returns "Not marked" unless a value is given.
                     # Else calculates percent for that assignment
-                    if grade_2[cal] == '-' or grade_2[cal] == '-':
-                        grade_2[cal] = not_marked_yet
-                        per = grade_2[cal]
-                        percent.append(per)
-                    elif pos2[cal] != '$' and grade_2[cal] != '$':
-                        per = str((float(grade_2[cal]) / float(pos2[cal])) * 100)
-                        percent.append(per)
-            except ValueError as er:
-                logging.exception('Error in percentage, class: {}, assignment:{}, error{}'.format(course, cal, str(er)))
+                    if self.grade[0] == '-' or self.grade[0] == '-':
+                        self.grade[0] = not_marked_yet
+                        self.percent.append(self.grade[0])
 
-    return percent
+                    elif self.possible[0] != '$' and self.grade[0] != '$':
+                        per = str((float(self.grade[0]) / float(self.possible[0])) * 100)
+                        self.percent.append(per)
 
-
-# Gets dictionary of old courses
-def get_old_percent(course):
-    o_course_list = old_percent[course]
-
-    for g in range(len(o_course_list)):
-        # Tests if value is a num
-        if isinstance(o_course_list[g], float):
-
-            # Tests if value is a place holder: Nan
-            if math.isnan(o_course_list[g]):
-                o_course_list[g] = "$"  # Replaces with a easy to remove character
-            else:
-                o_course_list[g] = str(o_course_list[g])
+        except ValueError as er:
+            logging.exception('Error in percentage, class: {}, assignment:{}, error{}'.format(self, '1', er))
 
         else:
-            o_course_list[g] = o_course_list[g].split("%")
+            for cal in range(ass_len):
+                try:
+                    # Checks if the value is marked
+                    if self.possible[cal] == '' or self.possible[cal] == '-':
+                        self.possible[cal] = not_marked
 
-    # Removes characters
-    for g in o_course_list[:]:
-        if g == "$":
-            o_course_list.remove(g)
+                    else:
+                        # Returns "Not marked" unless a value is given.
+                        # Else calculates percent for that assignment
+                        if self.grade[cal] == '-' or self.grade[cal] == '-':
+                            self.grade[cal] = not_marked_yet
+                            self.percent.append(self.grade[cal])
+
+                        elif self.possible[cal] != '$' and self.grade[cal] != '$':
+                            per = str((float(self.grade[cal]) / float(self.possible[cal])) * 100)
+                            self.percent.append(per)
+
+                except ValueError as er:
+                    logging.exception('Error in percentage, class: {}, assignment:{}, error{}'.format(self, cal, er))
+
+    # Gets dictionary of old courses
+    def get_old_percent(self):
+        o_course_list = old_percent[self]
+
+        for g in range(len(o_course_list)):
+            # Tests if value is a num
+            if type(o_course_list[g]) == float:
+
+                # Tests if value is a place holder: Nan
+                if math.isnan(o_course_list[g]):
+                    o_course_list[g] = "$"  # Replaces with a easy to remove character
+                else:
+                    o_course_list[g] = str(o_course_list[g])
+
+            else:
+                o_course_list[g] = o_course_list[g].split("%")
+
+        # Removes characters
+        o_course_list = [g for g in o_course_list if g != '$']
 
 
 # Checks if any grades updated
@@ -243,7 +235,7 @@ def any_updates(update):
 
     # Converts to string and saves into final list
     for og in old_grade_temp:
-        if isinstance(og, str):  # Keeps strings unaltered
+        if type(og) == str:  # Keeps strings unaltered
             old_grades.append(og)
         else:
             old_grades.append(og[0])
@@ -335,80 +327,6 @@ def out_put():
         logging.exception("Error in mail: " + str(er))
 
 
-# Crowdmark function
-def crowd():
-    # Changes grade column index for crowdmark tests
-    def crowd_test(table, mod):  # Mod is modulus
-
-        crowd_percent = []
-        ass_crowd = 0  # Number of assignments
-
-        for g in table:  # Changes to text
-            g = g.text
-            ass_crowd += 1
-
-            if ass_crowd % mod == 0:  # Returns 4th column
-                if g != '' and g != '   ^`^t':
-                    g_per = g.split("%")  # Removes percent sign
-                    crowd_percent.append(g_per[0])
-                else:
-                    crowd_percent.append(not_marked_yet)
-
-        return crowd_percent
-
-    # Change for course.
-    def crowd_change(course):
-        # direct link for faster operation
-        driver.get(crowd_link + course)
-        WebDriverWait(driver, 10).until(g_load)
-
-        # Local Variables
-        table_percent = []
-        num = 0
-
-        # Changes index for grades if test or assignment
-        tables = driver.find_elements_by_tag_name('table')
-
-        if len(tables) == 1:  # Gos directly to assignments if no tests
-            data_val = 4
-            table_data = tables[0].find_elements_by_tag_name('td')
-            table_percent = crowd_test(table_data, data_val)
-
-        else:
-            for table_id in tables:  # Looks for table data in each table
-                table_data = table_id.find_elements_by_tag_name('td')
-                num += 1
-
-                # Goes to tests for first table, and assignments for second.
-                if num == 1:
-                    data_val = 3
-
-                else:
-                    data_val = 4
-
-                # Gets percent from tests then percent from assignments
-                crowd_per = crowd_test(table_data, data_val)
-                table_percent += crowd_per
-
-        return table_percent
-
-    # Element locators for wait function
-    g_load = ec.presence_of_element_located((By.TAG_NAME, 'td'))  # grade tables
-    # crowdmark loading
-    driver.get('https://app.crowdmark.com/sign-in')
-    driver.find_element_by_id('user_email').send_keys(c_usr)
-    driver.find_element_by_id('user_password').send_keys(c_psw)
-    driver.find_element_by_xpath('/html/body/section/main/section/div/div[1]/form/div/input').click()
-
-    # Crowdmark calling function
-    for cc in crowd_course.keys():  # Grabs id
-        percent_crowd = crowd_change(crowd_course[cc])
-
-        # Reveres Crowdmark's stupid ordering and appends to percent dict
-        percent_crowd.reverse()
-        dict_percent[cc] = percent_crowd
-
-
 # main execution
 c_l = list(course_id.values())
 try:
@@ -450,29 +368,29 @@ else:  # no error
                 driver.get(g_link)  # Switch courses
 
             # Saves output as local variable
-            course_g, course_o, course_p = find_grades(c)
+            # todo change var
+            course = CourseGrades()
 
-            dict_grades[c] = course_g
-            dic_out_of[c] = course_o
-            dict_percent[c] = course_p
+            dict_grades[c] = course.grade
+            dic_out_of[c] = course.possible
+            dict_percent[c] = course.percent
+
+            # Only runs is old dict is updated. Else updates
+            # will send message block at end
+            if c in old_percent.keys():
+                course.get_old_percent()  # Calls up old grades
+                any_updates(c)  # True/false for each course
+
+            else:
+                changed_course[c] = []
+
         except ValueError as e:
             logging.exception("error calc" + str(e))
             was_error = True
 
-    # Calls function for any updates; for each course
-    for co in course_id.keys():
+        driver.quit()  # quits driver
 
-        # Only runs is old dict is updated. Else updates
-        # will send message block at end
-        if co in old_percent.keys():
-            get_old_percent(co)  # Calls up old grades
-            any_updates(co)  # True/false for each course
-
-        else:
-            changed_course[co] = []
-    driver.quit()  # quits driver
-
-# Excel formatting
+# Excel formatting  # todo can replace by csv, send csv or json
 # Padding the dicts so that all are same length to print
 lmax = 0
 
