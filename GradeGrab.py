@@ -80,17 +80,19 @@ options.headless = True
 
 # Functions
 class CourseGrades:
-    def __init__(self):
+    def __init__(self, co):
         self.grade = []
         self.possible = []
         self.percent = []
         self.mod = 2  # can be mod in fmat
+        self.course = co
+        self.old_g_ls = old_percent[self.course]
 
     # Removes redundant grades for specific courses.
     def format_course(self):  # todo fix for self
         # todo add explain for format
         # only adds final grades from lab
-        if self == 'CIV E 270 Lec':
+        if self.course == 'CIV E 270 Lec':
             for ass_num in range(len(self.possible)):
 
                 # Only takes third grade
@@ -99,7 +101,7 @@ class CourseGrades:
                     self.possible[ass_num] = "$"
 
         # Only adds midterm grades
-        elif self == 'CIV E 270 Lab':
+        elif self.course == 'CIV E 270 Lab':
             ass_l = []
             for ass_num in range(len(self.possible)):
                 el = 'Section D1 - LABORATORY NO.{} SUBMISSION PORTAL'.format(ass_num + 1)
@@ -111,7 +113,7 @@ class CourseGrades:
                     self.grade[ass_num] = "$"  # Value that can be removed
                     self.possible[ass_num] = "$"
 
-        elif self == 'MEC E 200':
+        elif self.course == 'MEC E 200':
             for ass_num in range(len(self.possible)):
                 try:
                     float(self.possible[ass_num])  # test if float
@@ -119,7 +121,7 @@ class CourseGrades:
                     self.grade[ass_num] = "$"  # Value that can be removed
                     self.possible[ass_num] = "$"
 
-        elif self == 'STAT 235 Lec':  # Not Working yet
+        elif self.course == 'STAT 235 Lec':  # Not Working yet
             for ass_num in range(len(self.possible)):
                 if ass_num + 1 == 6 or ass_num + 1 == 12 or ass_num + 1 > 15:  # to remove assign total
                     self.grade[ass_num] = "$"  # Value that can be removed
@@ -205,75 +207,70 @@ class CourseGrades:
 
     # Gets dictionary of old courses
     def get_old_percent(self):
-        o_course_list = old_percent[self]
-
-        for g in range(len(o_course_list)):
+        for g in range(len(self.old_g_ls)):
             # Tests if value is a num
-            if type(o_course_list[g]) == float:
+            if type(self.old_g_ls[g]) == float:
 
                 # Tests if value is a place holder: Nan
-                if math.isnan(o_course_list[g]):
-                    o_course_list[g] = "$"  # Replaces with a easy to remove character
+                if math.isnan(self.old_g_ls[g]):
+                    self.old_g_ls[g] = "$"  # Replaces with a easy to remove character
                 else:
-                    o_course_list[g] = str(o_course_list[g])
+                    self.old_g_ls[g] = str(self.old_g_ls[g])
 
             else:
-                o_course_list[g] = o_course_list[g].split("%")
+                self.old_g_ls[g] = self.old_g_ls[g].split("%")
 
         # Removes characters
-        o_course_list = [g for g in o_course_list if g != '$']
+        self.old_g_ls = [g for g in self.old_g_ls if g != '$']
 
+    # Checks if any grades updated
+    def any_updates(self):
+        # Two old grades since list of lists need to be removed
+        old_grades = []
 
-# Checks if any grades updated
-def any_updates(update):
-    # Two old grades since list of lists need to be removed
-    old_grades = []
-    old_grade_temp = old_percent[update]
-    new_grade = dict_percent[update]
+        # So % can be printed
+        cent = "%"
 
-    # So % can be printed
-    cent = "%"
-
-    # Converts to string and saves into final list
-    for og in old_grade_temp:
-        if type(og) == str:  # Keeps strings unaltered
-            old_grades.append(og)
-        else:
-            old_grades.append(og[0])
-
-    # Do this if they might be the same
-    if len(old_grades) == len(new_grade):
-
-        for i in range(len(old_grades)):
-
-            if old_grades[i] != new_grade[i]:  # Checks if that grade is updated
-
-                if new_grade[i] == not_marked_yet or new_grade[i] == not_marked or old_grades[i] == not_marked:
-                    cent = ''  # Corrects grammar: no % if not marked
-                output_str = "Assignment: {}, Old percentage: {}, New percentage: {}{}".format(str(i + 1),
-                                                                                               old_grades[i],
-                                                                                               new_grade[i],
-                                                                                               cent)
-                if update in changed_course.keys():
-                    changed_course[update].append(output_str)
-                else:
-                    changed_course[update] = [output_str]
-
-    # They are guaranteed different. Thus print all new indexes
-    else:
-        # is_same = False
-        # Prints the indexes that were not on old index
-        dif_len = len(new_grade) - len(old_grades)
-
-        for i in range(dif_len):
-
-            up_in = i + len(old_grades)  # index for new grade
-            output_str = "Assignment: {}, New percentage: {}{}".format(str(up_in), new_grade[up_in], cent)
-
-            if update in changed_course.keys():
-                changed_course[update].append(output_str)
+        # Converts to string and saves into final list
+        for og in self.old_g_ls:
+            if type(og) == str:  # Keeps strings unaltered
+                old_grades.append(og)
             else:
-                changed_course[update] = [output_str]
+                old_grades.append(og[0])
+
+        # Do this if they might be the same
+        if len(old_grades) == len(self.grade):
+
+            for i in range(len(old_grades)):
+
+                if old_grades[i] != self.grade[i]:  # Checks if that grade is updated
+
+                    if self.grade[i] == not_marked_yet or self.grade[i] == not_marked or old_grades[i] == not_marked:
+                        cent = ''  # Corrects grammar: no % if not marked
+                    output_str = "Assignment: {}, Old percentage: {}, New percentage: {}{}".format(str(i + 1),
+                                                                                                   old_grades[i],
+                                                                                                   self.grade[i],
+                                                                                                   cent)
+                    if self.course in changed_course.keys():
+                        changed_course[self.course].append(output_str)
+                    else:
+                        changed_course[self.course] = [output_str]
+
+        # They are guaranteed different. Thus print all new indexes
+        else:
+            # is_same = False
+            # Prints the indexes that were not on old index
+            dif_len = len(self.grade) - len(old_grades)
+
+            for i in range(dif_len):
+
+                up_in = i + len(old_grades)  # index for new grade
+                output_str = "Assignment: {}, New percentage: {}{}".format(str(up_in), self.grade[up_in], cent)
+
+                if self.course in changed_course.keys():
+                    changed_course[self.course].append(output_str)
+                else:
+                    changed_course[self.course] = [output_str]
 
 
 # Email Output
@@ -309,12 +306,13 @@ def out_put():
     # sets content
     if not was_error:
         msg["Subject"] = "Grade Changed"
-        msg.set_content(message_con)
-        print(message_con)
     else:
         msg["Subject"] = "Grade Error"
-        msg.set_content(message_con)
+        message_con = "Error log:\n"
+
         msg.add_attachment(open("log.log", "r").read())
+    msg.set_content(message_con)
+    print(message_con)
     logging.info("starting to send")
     print("starting to send")
     try:
@@ -369,8 +367,7 @@ else:  # no error
                 driver.get(g_link)  # Switch courses
 
             # Saves output as local variable
-            # todo change var
-            course = CourseGrades()
+            course = CourseGrades(c)
 
             dict_grades[c] = course.grade
             dic_out_of[c] = course.possible
@@ -380,7 +377,7 @@ else:  # no error
             # will send message block at end
             if c in old_percent.keys():
                 course.get_old_percent()  # Calls up old grades
-                any_updates(c)  # True/false for each course
+                course.any_updates()  # True/false for each course
 
             else:
                 changed_course[c] = []
