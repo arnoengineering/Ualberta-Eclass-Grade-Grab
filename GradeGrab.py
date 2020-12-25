@@ -24,8 +24,8 @@ import logging
 
 # todo
 """
-self fix
-seperate file for email
+logclear: readlines, attach, main email
+layered imports
 day of week
 function for web
  """
