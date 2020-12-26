@@ -20,6 +20,7 @@ def log_check():
     with open(fname, 'r') as f:
         for line in f.readlines():
             c += 1
+    return c
 
 def log_clear():
     # removes old logs
@@ -28,37 +29,81 @@ def log_clear():
     file.close()
 
 
-def email(user, receivers, log, attachment, subject):
+def email(user, receivers, password,  subject, attachment=None, changed_course=None, course_id=None):
+    # todo if er: attach
+
+    # format var
+    if changed_course is None:
+        changed_course = {}
+    if course_id is None:
+        course_id = {}
+    if attachment is None:
+        attachment = []
+
     host_server = "smtp.gmail.com"
     port = 465
 
     # what to send
     msg = MIMEMultipart()
-    msg['To'] = receivers
+    msg['To'] = ', '.join(receivers)
     msg['From'] = user
     msg["Subject"] = subject
 
-    message_con = """Weekly log update\n\n"""
+    def g_mail():
+        web_link = ''
+        message = 'Grades Changed\n\n'
+        links = []
+        for d in changed_course.keys():  # loops through every updated course
+            message += f"Course Changed: {d}\n"
+
+            # is course in eclass; then loads website
+            if d in course_id.keys():
+                links.append(web_link + course_id[d])
+
+            # prints new grads
+            for m in changed_course[d]:
+                message += (m + "\n")
+
+        # adds links to message content
+        message += "\nlinks: \n"  # Only prints once tells message box what to say
+        for link in links:
+            message += (link + "\n")
+        return message
+    # def main
+    if subject == "Grades Changed":
+        message_con = g_mail()
+    else:
+        message_con = f"""{subject}\n\n"""
+
+    if weekday == 7:
+        msg['Subject'] += ' Weekly update'
+        log = log_check()
+    else:
+        log = 0
     # sets content
     if log == 0:
         message_con += 'No errors'
         msg.attach(MIMEText(message_con, 'plain'))
     else:
-        # Open PDF file in binary mode
-        for file in attachment:
-            with open(file, "rb") as atmnt:
-                # Add file as application/octet-stream
-                # Email client can usually download this automatically as attachment
-                part = MIMEBase("application", "octet-stream")
-                part.set_payload(atmnt.read())
+        attachment.append(fname)
 
-            # Encode file in ASCII characters to send by email
-            encoders.encode_base64(part)
-            part.add_header("Content-Disposition", f"attachment; filename= {file}",)
+    # attachments
+    # Open PDF file in binary mode
+    for file in attachment:
+        with open(file, "rb") as atmnt:
+            # Add file as application/octet-stream
+            # Email client can usually download this automatically as attachment
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(atmnt.read())
 
-            # Add attachment to message and convert message to string
-            msg.attach(part)
+        # Encode file in ASCII characters to send by email
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", f"attachment; filename= {file}",)
 
+        # Add attachment to message and convert message to string
+        msg.attach(part)
+
+    msg.attach(MIMEText(message_con, 'plain'))
     ctx = ssl.create_default_context()
     with smtplib.SMTP_SSL(host_server, port, context=ctx) as server:
         server.login(user, password)

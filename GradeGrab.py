@@ -26,6 +26,7 @@ import logging
 """
 logclear: readlines, attach, main email
 layered imports
+rem total
 day of week
 function for web
  """
