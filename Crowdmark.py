@@ -29,7 +29,7 @@ def crowd():
         table_percent = []
         num = 0
 
-        # Changes index for grades if test or assignment
+        # Changes index for dict_percent if test or assignment
         tables = driver.find_elements_by_tag_name('table')
 
         if len(tables) == 1:  # Gos directly to assignments if no tests

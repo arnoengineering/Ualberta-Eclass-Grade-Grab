@@ -1,56 +1,48 @@
 # coding: utf-8
 # Removes log file and sends old file if errors
+from GradeGrab import log_name, csv_file, web_link, user, receivers, password, changed_course, course_id
+from datetime import date
+
 import smtplib
 import ssl
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import logging
-weekday = 7  # todo fix
 
-fname = 'log.log'
-attachments = [fname, 'Grades.csv']
-logging.basicConfig(filename=fname, level=logging.INFO)
+weekday = date.today().weekday()  # gets current date to clear log
 
 
+# checks if lines in log
 def log_check():
-    # logging
-    c = 0
-    with open(fname, 'r') as f:
-        for line in f.readlines():
-            c += 1
-    return c
+    with open(log_name, 'r') as f:
+        file_len = len(f.readlines())
+    return file_len
 
+
+# removes old logs
 def log_clear():
-    # removes old logs
-    file = open(fname, 'w')
+    file = open(log_name, 'w')
     file.truncate(0)
     file.close()
 
 
-def email(user, receivers, password,  subject, attachment=None, changed_course=None, course_id=None):
-    # todo if er: attach
-
-    # format var
-    if changed_course is None:
-        changed_course = {}
-    if course_id is None:
-        course_id = {}
+# sends email, adds attachments if sent
+def email(subject, attachment=None):
     if attachment is None:
         attachment = []
 
     host_server = "smtp.gmail.com"
     port = 465
 
-    # what to send
+    # initializes
     msg = MIMEMultipart()
     msg['To'] = ', '.join(receivers)
     msg['From'] = user
     msg["Subject"] = subject
 
+    # if grades to be sent, formatting
     def g_mail():
-        web_link = ''
         message = 'Grades Changed\n\n'
         links = []
         for d in changed_course.keys():  # loops through every updated course
@@ -69,34 +61,37 @@ def email(user, receivers, password,  subject, attachment=None, changed_course=N
         for link in links:
             message += (link + "\n")
         return message
-    # def main
-    if subject == "Grades Changed":
+
+    # checks what to send and sends it
+    if subject == "Grades Changed":  # used if grades
         message_con = g_mail()
     else:
-        message_con = f"""{subject}\n\n"""
+        message_con = f"""{subject}\n\n"""  # generic message
 
-    if weekday == 7:
+    if weekday == 6:  # adds weekly updates
         msg['Subject'] += ' Weekly update'
+        attachment.append(csv_file)
         log = log_check()
     else:
         log = 0
-    # sets content
+
+    # sets content, if check, log will be 0
     if log == 0:
         message_con += 'No errors'
         msg.attach(MIMEText(message_con, 'plain'))
     else:
-        attachment.append(fname)
+        attachment.append(log_name)
 
     # attachments
-    # Open PDF file in binary mode
+    # Open PDF csv_file in binary mode
     for file in attachment:
-        with open(file, "rb") as atmnt:
-            # Add file as application/octet-stream
+        with open(file, "rb") as f:
+            # Add csv_file as application/octet-stream
             # Email client can usually download this automatically as attachment
             part = MIMEBase("application", "octet-stream")
-            part.set_payload(atmnt.read())
+            part.set_payload(f.read())
 
-        # Encode file in ASCII characters to send by email
+        # Encode csv_file in ASCII characters to send by email
         encoders.encode_base64(part)
         part.add_header("Content-Disposition", f"attachment; filename= {file}",)
 
@@ -110,3 +105,6 @@ def email(user, receivers, password,  subject, attachment=None, changed_course=N
         print("starting to send")
         server.sendmail(user, receivers, msg.as_string())
         print("sent")
+
+    if log_name in attachment:
+        log_clear()

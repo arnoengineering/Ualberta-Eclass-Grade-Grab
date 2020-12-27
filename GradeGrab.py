@@ -22,20 +22,15 @@ import ssl
 from email.message import EmailMessage
 import logging
 
-# todo
-"""
-logclear: readlines, attach, main email
-layered imports
-rem total
-day of week
-function for web
- """
+# todo rem total, add weekday to main
+
 # Global Variables
 # locations
 os.chdir(os.path.dirname(sys.argv[0]))
 web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
-file = 'Grades.csv'  # File location of Spreadsheet
 crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
+log_name = 'log.log'
+csv_file = 'Grades.csv'  # File location of Spreadsheet
 
 # users & passwords
 # users & passwords opens file then saves them
@@ -68,11 +63,11 @@ dic_out_of = {}
 dict_percent = {}
 old_percent = {}
 
-# list of all courses with changed grades
+# list of all courses with changed dict_percent
 changed_course = {}
 
 # initialize the log settings
-logging.basicConfig(filename='log.log', level=logging.INFO)
+logging.basicConfig(filename=log_name, level=logging.INFO)
 was_error = False  # any errors
 # Define driver
 options = Options()
@@ -80,19 +75,22 @@ options.headless = True
 
 
 # Functions
+# grades per course
 class CourseGrades:
     def __init__(self, co):
         self.grade = []
         self.possible = []
         self.percent = []
-        self.mod = 2  # can be mod in fmat
+        self.mod = 2
         self.course = co
         self.old_g_ls = old_percent[self.course]
 
-    # Removes redundant grades for specific courses.
-    def format_course(self):  # todo fix for self
-        # todo add explain for format
-        # only adds final grades from lab
+    # Removes redundant dict_percent for specific courses.
+    def format_course(self):
+        """Used to remove other values from dicts if eclass has different format.
+
+        """
+        # only adds final dict_percent from lab
         if self.course == 'CIV E 270 Lec':
             for ass_num in range(len(self.possible)):
 
@@ -101,7 +99,7 @@ class CourseGrades:
                     self.grade[ass_num] = "$"  # Value that can be removed
                     self.possible[ass_num] = "$"
 
-        # Only adds midterm grades
+        # Only adds midterm dict_percent
         elif self.course == 'CIV E 270 Lab':
             ass_l = []
             for ass_num in range(len(self.possible)):
@@ -127,7 +125,7 @@ class CourseGrades:
                 if ass_num + 1 == 6 or ass_num + 1 == 12 or ass_num + 1 > 15:  # to remove assign total
                     self.grade[ass_num] = "$"  # Value that can be removed
                     self.possible[ass_num] = "$"
-        if '$' in self.grade:  # removes the extra superfluous grades
+        if '$' in self.grade:  # removes the extra superfluous dict_percent
             self.grade.remove('$')
             self.possible.remove('$')
 
@@ -224,9 +222,9 @@ class CourseGrades:
         # Removes characters
         self.old_g_ls = [g for g in self.old_g_ls if g != '$']
 
-    # Checks if any grades updated
+    # Checks if any dict_percent updated
     def any_updates(self):
-        # Two old grades since list of lists need to be removed
+        # Two old dict_percent since list of lists need to be removed
         old_grades = []
 
         # So % can be printed
@@ -284,7 +282,7 @@ def out_put():
     msg = EmailMessage()
     msg['From'] = user
 
-    message_con = """Arno your grades have been updated\n\n"""
+    message_con = """Arno your dict_percent have been updated\n\n"""
 
     links = []
 
@@ -330,7 +328,7 @@ def out_put():
 # main execution
 c_l = list(course_id.values())
 try:
-    read = pd.read_csv(file)  # read from excel
+    read = pd.read_csv(csv_file)  # read from excel
     if not read.empty:
         print('Logging Grades')
         old_percent = read.to_dict('list')
@@ -358,7 +356,7 @@ except Exception as e:
     was_error = True
 
 else:  # no error
-    # Calls functions for chancing course, and getting grades for each course.
+    # Calls functions for chancing course, and getting dict_percent for each course.
     for c in course_id.keys():
         logging.info('class' + c)
         try:
@@ -377,7 +375,7 @@ else:  # no error
             # Only runs is old dict is updated. Else updates
             # will send message block at end
             if c in old_percent.keys():
-                course.get_old_percent()  # Calls up old grades
+                course.get_old_percent()  # Calls up old dict_percent
                 course.any_updates()  # True/false for each course
 
             else:
@@ -393,7 +391,7 @@ else:  # no error
 # Padding the dicts so that all are same length to print
 lmax = 0
 
-# Finds longest list of grades
+# Finds longest list of dict_percent
 for n in dict_percent.keys():
     lmax = max(lmax, len(dict_percent[n]))
 
@@ -406,7 +404,7 @@ for n in dict_percent.keys():
 try:
     # Outputs to file
     df = pd.DataFrame(data=dict_percent)  # Selects Data
-    df.to_csv(file, index=False)
+    df.to_csv(csv_file, index=False)
 except IOError as e:
     logging.exception("Error in csv: " + str(e))
     was_error = True
