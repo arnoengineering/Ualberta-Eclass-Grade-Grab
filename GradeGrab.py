@@ -44,7 +44,7 @@ c_psw = str(lines[8]).strip()  # crowdmark password
 # for email credentials
 user = str(lines[10]).strip()
 password = str(lines[14]).strip()
-receivers = str(lines[12]).strip()
+receivers = str(lines[12]).strip().split(', ')
 usr_f.close()
 
 # Course list to call function
@@ -78,12 +78,13 @@ options.headless = True
 # grades per course
 class CourseGrades:
     def __init__(self, co):
+        self.ass_names = []
         self.grade = []
         self.possible = []
         self.percent = []
         self.mod = 2
         self.course = co
-        self.old_g_ls = old_percent[self.course]
+        self.old_g_ls = []
 
     # Removes redundant dict_percent for specific courses.
     def format_course(self):
@@ -161,6 +162,25 @@ class CourseGrades:
         self.format_course()  # calls function for rand courses
         self.percent_cal()  # calls percent function
 
+    def find_g(self):  # to use if works
+        rows = driver.find_elements_by_tag_name('tr')
+        header = rows.find_element_by_tag_name('th')
+        try:
+            header.find_element_by_tag_name('span')
+        except:  # todo fix expet, use instead
+            pass
+        else:
+            self.ass_names.append(header)
+            data_list = rows.find_elements_by_tag_name('td')
+
+            for col in data_list:
+                cl = col.getAttribute('class')
+                col_type = cl.split(' ', -1)
+                if col_type == 'grade':
+                    self.grade.append(col.text)
+                elif col_type == 'range':
+                    self.possible.append(col.text)
+
     # Percentage calculation
     def percent_cal(self):
         ass_len = len(self.possible) - 1  # Number of assignments
@@ -206,21 +226,22 @@ class CourseGrades:
 
     # Gets dictionary of old courses
     def get_old_percent(self):
-        for g in range(len(self.old_g_ls)):
+        old_grades = old_percent[self.course]
+        for g in range(len(old_grades)):
             # Tests if value is a num
-            if type(self.old_g_ls[g]) == float:
+            if type(old_grades[g]) == float:
 
                 # Tests if value is a place holder: Nan
-                if math.isnan(self.old_g_ls[g]):
-                    self.old_g_ls[g] = "$"  # Replaces with a easy to remove character
+                if math.isnan(old_grades[g]):
+                    old_grades[g] = "$"  # Replaces with a easy to remove character
                 else:
-                    self.old_g_ls[g] = str(self.old_g_ls[g])
+                    old_grades[g] = str(old_grades[g])
 
             else:
-                self.old_g_ls[g] = self.old_g_ls[g].split("%")
+                old_grades[g] = old_grades[g].split("%")
 
         # Removes characters
-        self.old_g_ls = [g for g in self.old_g_ls if g != '$']
+        self.old_g_ls = [g for g in old_grades if g != '$']
 
     # Checks if any dict_percent updated
     def any_updates(self):
@@ -305,12 +326,13 @@ def out_put():
     # sets content
     if not was_error:
         msg["Subject"] = "Grade Changed"
+        msg.set_content(message_con)
     else:
         msg["Subject"] = "Grade Error"
         message_con = "Error log:\n"
-
+        msg.set_content(message_con)
         msg.add_attachment(open("log.log", "r").read())
-    msg.set_content(message_con)
+
     print(message_con)
     logging.info("starting to send")
     print("starting to send")
@@ -358,7 +380,7 @@ except Exception as e:
 else:  # no error
     # Calls functions for chancing course, and getting dict_percent for each course.
     for c in course_id.keys():
-        logging.info('class' + c)
+        logging.info('class ' + c)
         try:
             if course_id[c] != c_l[0]:  # Since first link
 

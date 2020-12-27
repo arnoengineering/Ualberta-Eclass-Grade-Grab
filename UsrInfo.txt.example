@@ -1,0 +1,15 @@
+# Username and pasword storage space to not
+# Username:
+usr
+# Pasword
+pas
+# crowdusr
+cu
+# crowdpas
+cp
+# send email
+e1
+# revive email
+e2
+# Google API key for e1:
+api

@@ -37,7 +37,7 @@ def email(subject, attachment=None):
 
     # initializes
     msg = MIMEMultipart()
-    msg['To'] = ', '.join(receivers)
+    msg['To'] = ', '.join(receivers)  # todo change for log
     msg['From'] = user
     msg["Subject"] = subject
 

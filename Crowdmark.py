@@ -1,3 +1,6 @@
+from GradeGrab import driver, crowd_link, crowd_course
+
+
 # Crowdmark function
 def crowd():
     # Changes grade column index for crowdmark tests
