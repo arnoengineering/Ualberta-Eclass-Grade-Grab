@@ -8,6 +8,7 @@
 # Import variables
 import selenium
 from selenium.webdriver.common.by import By  # For wait until find 'by' condition
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait  # Wait condition
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.chrome.options import Options
@@ -21,7 +22,7 @@ from LogClear import email
 import Log
 import logging
 
-# todo rem total, add weekday to main
+# todo rem total; find el; json
 
 # Global Variables
 # locations
@@ -78,6 +79,8 @@ options.headless = True
 weekday = date.today().weekday()  # gets current date to clear log
 e_sub = 'Changed Grades'
 sub = e_sub
+c_l = list(course_id.values())
+
 
 # Functions
 # grades per course
@@ -94,7 +97,7 @@ class CourseGrades:
     # Removes redundant dict_percent for specific courses.
     def format_course(self):
         """Used to remove other values from dicts if eclass has different format.
-
+        head object, will change if not
         """
         # only adds final dict_percent from lab
         if self.course == 'CIV E 270 Lec':
@@ -107,14 +110,8 @@ class CourseGrades:
 
         # Only adds midterm dict_percent
         elif self.course == 'CIV E 270 Lab':
-            ass_l = []
-            for ass_num in range(len(self.possible)):
-                el = 'Section D1 - LABORATORY NO.{} SUBMISSION PORTAL'.format(ass_num + 1)
-                sec_d1 = driver.find_elements_by_tag_name('a')  # test if there is a link with ass_num
-                for d in sec_d1:
-                    d = d.text
-                    ass_l.append(d)
-                if el not in sec_d1:  # if not a link
+            for ass_num in self.ass_names:
+                if not ec.element_to_be_clickable(ass_num):
                     self.grade[ass_num] = "$"  # Value that can be removed
                     self.possible[ass_num] = "$"
 
@@ -135,56 +132,37 @@ class CourseGrades:
             self.grade.remove('$')
             self.possible.remove('$')
 
+        # sets to text to read
+        self.ass_names = [h.text for h in self.ass_names]
+
     # Finding Grades
     # Change To find column: ie change empty variables
-    def find_grades(self):
-        ind = 0  # Increments evey data row
-        rmv_feedback = 0
+    def find_grades(self):  # to use if works
+        rows = driver.find_elements_by_tag_name('tr')  # searches for rows then
+        for row in rows:
+            header = row.find_element_by_tag_name('th')
+            try:
+                span_el = header.find_element_by_tag_name('span')
+            except NoSuchElementException:
+                pass
+            else:
+                if span_el.getAttribute('class') == 'gradeItem':
+                    self.ass_names.append(header)
+                    data_list = row.find_elements_by_tag_name('td')
 
-        # Finds Table data points
-        li = driver.find_elements_by_tag_name('td')
-        for g in li:
-            g = g.text
-
-            # Removes text for feedback column
-            if len(g) >= 1:
-                rmv_feedback += 1
-            if rmv_feedback % 3 == 0:
-                g = ''
-
-            if g != '' and g != ' ':  # Checks if element is blank
-                ind += 1  # Increments indexes only after removing blank
-
-                if ind % self.mod == 0:
-                    pos = g.split('–')  # Looks at second value in grade_2 range
-                    if len(pos) == 2:  # Only looks if split is viable
-                        self.possible.append(pos[1])
-                    else:
-                        self.possible.append('-')  # Will return not marked in two blocks
-                else:
-                    self.grade.append(g)
-
+                    for col in data_list:
+                        cl = col.getAttribute('class')
+                        col_type = cl.split(' ', -1)
+                        if col_type == 'grade':
+                            self.grade.append(col.text)
+                        elif col_type == 'range':
+                            pos = col.text.split('–')  # Looks at second value in grade_2 range
+                            if len(pos) == 2:  # Only looks if split is viable
+                                self.possible.append(pos[1])
+                            else:
+                                self.possible.append('-')  # Will return not marked in two blocks
         self.format_course()  # calls function for rand courses
         self.percent_cal()  # calls percent function
-
-    def find_g(self):  # to use if works
-        rows = driver.find_elements_by_tag_name('tr')
-        header = rows.find_element_by_tag_name('th')
-        try:
-            header.find_element_by_tag_name('span')
-        except:  # todo fix expet, use instead
-            pass
-        else:
-            self.ass_names.append(header)
-            data_list = rows.find_elements_by_tag_name('td')
-
-            for col in data_list:
-                cl = col.getAttribute('class')
-                col_type = cl.split(' ', -1)
-                if col_type == 'grade':
-                    self.grade.append(col.text)
-                elif col_type == 'range':
-                    self.possible.append(col.text)
 
     # Percentage calculation
     def percent_cal(self):
@@ -299,8 +277,6 @@ class CourseGrades:
 
 
 # main execution
-c_l = list(course_id.values())
-# todo move to top, csv, log
 Log.grab_g()
 try:
     logging.info('Logging onto web')
