@@ -1,7 +1,8 @@
 # coding: utf-8
 # Removes log file and sends old file if errors
-from GradeGrab import log_name, csv_file, web_link, user, receivers, password, changed_course, course_id
-from datetime import date
+from GradeGrab import log_name, web_link, user, receivers, password, \
+    changed_course, course_id, attachment, e_sub
+
 
 import smtplib
 import ssl
@@ -9,8 +10,6 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-weekday = date.today().weekday()  # gets current date to clear log
 
 
 # checks if lines in log
@@ -28,9 +27,7 @@ def log_clear():
 
 
 # sends email, adds attachments if sent
-def email(subject, attachment=None):
-    if attachment is None:
-        attachment = []
+def email(subject):
 
     host_server = "smtp.gmail.com"
     port = 465
@@ -63,24 +60,17 @@ def email(subject, attachment=None):
         return message
 
     # checks what to send and sends it
-    if subject == "Grades Changed":  # used if grades
+    if e_sub in subject:  # used if grades
         message_con = g_mail()
     else:
         message_con = f"""{subject}\n\n"""  # generic message
 
-    if weekday == 6:  # adds weekly updates
-        msg['Subject'] += ' Weekly update'
-        attachment.append(csv_file)
-        log = log_check()
-    else:
-        log = 0
-
     # sets content, if check, log will be 0
-    if log == 0:
-        message_con += 'No errors'
-        msg.attach(MIMEText(message_con, 'plain'))
-    else:
-        attachment.append(log_name)
+    if log_name in attachment:
+        log = log_check()
+        if log == 0:
+            attachment.remove(log_name)  # so don't send if empty
+            message_con += 'No errors'
 
     # attachments
     # Open PDF csv_file in binary mode

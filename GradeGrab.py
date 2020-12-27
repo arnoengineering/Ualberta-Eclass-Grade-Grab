@@ -15,11 +15,11 @@ from selenium.webdriver.chrome.options import Options
 import math
 import os
 import sys
+from datetime import date
 
 import pandas as pd
-import smtplib
-import ssl
-from email.message import EmailMessage
+from LogClear import email
+import Log
 import logging
 
 # todo rem total, add weekday to main
@@ -27,6 +27,7 @@ import logging
 # Global Variables
 # locations
 os.chdir(os.path.dirname(sys.argv[0]))
+de_link = 'https://eclass.srv.ualberta.ca/my/'  # default link
 web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
 crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
 log_name = 'log.log'
@@ -69,10 +70,15 @@ changed_course = {}
 # initialize the log settings
 logging.basicConfig(filename=log_name, level=logging.INFO)
 was_error = False  # any errors
+attachment = []  # files to attach
+
 # Define driver
 options = Options()
 options.headless = True
 
+weekday = date.today().weekday()  # gets current date to clear log
+e_sub = 'Changed Grades'
+sub = e_sub
 
 # Functions
 # grades per course
@@ -293,74 +299,10 @@ class CourseGrades:
                     changed_course[self.course] = [output_str]
 
 
-# Email Output
-def out_put():
-    # Google location
-    host_server = "smtp.gmail.com"
-    port = 465
-
-    # what to send
-    msg = EmailMessage()
-    msg['From'] = user
-
-    message_con = """Arno your dict_percent have been updated\n\n"""
-
-    links = []
-
-    for d in changed_course.keys():  # loops through every updated course
-        message_con += ("Course Changed: " + d + "\n")
-
-        # is course in eclass; then loads website
-        if d in course_id.keys():
-            links.append(web_link + course_id[d])
-
-        # prints new grads
-        for m in changed_course[d]:
-            message_con += (m + "\n")
-
-    # adds links to message content
-    message_con += "\nlinks: \n"  # Only prints once tells message box what to say
-    for lin in links:
-        message_con += (lin + "\n")
-
-    # sets content
-    if not was_error:
-        msg["Subject"] = "Grade Changed"
-        msg.set_content(message_con)
-    else:
-        msg["Subject"] = "Grade Error"
-        message_con = "Error log:\n"
-        msg.set_content(message_con)
-        msg.add_attachment(open("log.log", "r").read())
-
-    print(message_con)
-    logging.info("starting to send")
-    print("starting to send")
-    try:
-        ctx = ssl.create_default_context()
-        with smtplib.SMTP_SSL(host_server, port, context=ctx) as server:
-            server.login(user, password)
-            msg['To'] = receivers
-            server.send_message(msg)
-            print("sent")
-    except IOError as er:
-        logging.exception("Error in mail: " + str(er))
-
-
 # main execution
 c_l = list(course_id.values())
-try:
-    read = pd.read_csv(csv_file)  # read from excel
-    if not read.empty:
-        print('Logging Grades')
-        old_percent = read.to_dict('list')
-    for k in old_percent.keys():
-        if k not in course_id.keys():
-            old_percent.remove(k)
-except Exception as e:
-    was_error = True
-    logging.exception("Error in open csv: " + str(e))
-
+# todo move to top, csv, log
+Log.grab_g()
 try:
     logging.info('Logging onto web')
     driver = selenium.webdriver.Chrome(options=options)
@@ -407,32 +349,23 @@ else:  # no error
             logging.exception("error calc" + str(e))
             was_error = True
 
-        driver.quit()  # quits driver
+    driver.quit()  # quits driver
 
-# Excel formatting  # todo can replace by csv, send csv or json
-# Padding the dicts so that all are same length to print
-lmax = 0
-
-# Finds longest list of dict_percent
-for n in dict_percent.keys():
-    lmax = max(lmax, len(dict_percent[n]))
-
-# Sets all other courses to have same length: with empty str
-for n in dict_percent.keys():
-    leng = len(dict_percent[n])
-
-    if leng < lmax:
-        dict_percent[n] += [""] * (lmax - leng)
+# Excel formatting
 try:
-    # Outputs to file
-    df = pd.DataFrame(data=dict_percent)  # Selects Data
-    df.to_csv(csv_file, index=False)
+    Log.write_grade()
 except IOError as e:
     logging.exception("Error in csv: " + str(e))
     was_error = True
 
 # email updates
-if len(changed_course) != 0 or was_error:
-    out_put()
-else:
-    print('Nothing Updated')
+if weekday == 6:
+    sub += ' Weekly Update'
+    attachment = [log_name, csv_file]
+elif was_error:
+    sub += ' Error'
+    attachment = [log_name]
+if len(changed_course) == 0:
+    sub = sub.replace(e_sub, '')
+
+email(sub)
