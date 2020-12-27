@@ -17,7 +17,6 @@ import os
 import sys
 from datetime import date
 
-import pandas as pd
 from LogClear import email
 import Log
 import logging
