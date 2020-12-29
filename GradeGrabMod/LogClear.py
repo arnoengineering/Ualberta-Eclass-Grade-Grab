@@ -1,6 +1,6 @@
 # coding: utf-8
 # Removes log file and sends old file if errors
-from Creds import *
+from GradeGrabMod.Creds import *
 
 
 import smtplib

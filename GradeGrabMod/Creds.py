@@ -2,9 +2,12 @@ de_link = 'https://eclass.srv.ualberta.ca/my/'  # default link
 web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
 crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
 log_name = 'log.log'
-csv_file = 'Grades.csv'  # File location of Spreadsheet
+csv_file = '../Grades.csv'  # File location of Spreadsheet
 e_sub = 'Changed Grades'
 
+# What to print if not marked
+not_marked = "N M"
+not_marked_yet = "Not M Yet"
 
 # Course list to call function
 course_id = {'CIV E 270 Lec': '63547', 'CIV E 270 Lab': '64807', 'CH E 243 Lec': '62226', 'Ch E 243 Sem': '64632',
@@ -25,7 +28,7 @@ changed_course = {}
 
 # users & passwords
 # users & passwords opens file then saves them
-usr_f = open('UsrInfo.txt', 'r')
+usr_f = open('../UsrInfo.txt', 'r')
 lines = usr_f.readlines()
 usr = str(lines[2]).strip()
 psw = str(lines[4]).strip()

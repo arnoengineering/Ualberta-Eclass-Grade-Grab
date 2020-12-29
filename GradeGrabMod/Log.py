@@ -1,6 +1,6 @@
 import pandas as pd
 from pandas.errors import EmptyDataError
-from GradeGrab import csv_file
+from GradeGrabMod import csv_file
 
 
 def grab_g():
