@@ -17,67 +17,32 @@ import math
 import os
 import sys
 from datetime import date
-
+from Creds import *
 from LogClear import email
 import Log
 import logging
 
-# todo rem total; find el; json
+# todo rem total; find el; json; order var, update linux
 
 # Global Variables
 # locations
 os.chdir(os.path.dirname(sys.argv[0]))
-de_link = 'https://eclass.srv.ualberta.ca/my/'  # default link
-web_link = 'https://eclass.srv.ualberta.ca/grade/report/user/index.php?id='  # To change courses base on ID
-crowd_link = 'https://app.crowdmark.com/student/courses/'  # Link for crowdmark courses
-log_name = 'log.log'
-csv_file = 'Grades.csv'  # File location of Spreadsheet
 
-# users & passwords
-# users & passwords opens file then saves them
-usr_f = open('UsrInfo.txt', 'r')
-lines = usr_f.readlines()
-usr = str(lines[2]).strip()
-psw = str(lines[4]).strip()
-c_usr = str(lines[6]).strip()  # crowdmark usr
-c_psw = str(lines[8]).strip()  # crowdmark password
-
-# for email credentials
-user = str(lines[10]).strip()
-password = str(lines[14]).strip()
-receivers = str(lines[12]).strip().split(', ')
-usr_f.close()
-
-# Course list to call function
-course_id = {'CIV E 270 Lec': '63547', 'CIV E 270 Lab': '64807', 'CH E 243 Lec': '62226', 'Ch E 243 Sem': '64632',
-             'ENGG 299': '64113', 'MATH 209 Lec': '63051', 'MATH 209 Lab': '635311', 'MEC E 200': '64082',
-             'MEC E 250': '64397', 'STAT 235 Lec': '63953', 'STAT 235 Lab': '64115'}
-crowd_course = {}  # if crowdmark
 
 # What to print if not marked
 not_marked = "N M"
 not_marked_yet = "Not M Yet"
 
-# Dictionaries for Holding grade and percentage outputs
-dict_grades = {}
-dic_out_of = {}
-dict_percent = {}
-old_percent = {}
-
-# list of all courses with changed dict_percent
-changed_course = {}
-
 # initialize the log settings
 logging.basicConfig(filename=log_name, level=logging.INFO)
 was_error = False  # any errors
-attachment = []  # files to attach
+
 
 # Define driver
 options = Options()
 options.headless = True
 
 weekday = date.today().weekday()  # gets current date to clear log
-e_sub = 'Changed Grades'
 sub = e_sub
 c_l = list(course_id.values())
 
@@ -328,7 +293,7 @@ else:  # no error
 
 # Excel formatting
 try:
-    Log.write_grade()
+    Log.write_grade(dict_percent)
 except IOError as e:
     logging.exception("Error in csv: " + str(e))
     was_error = True

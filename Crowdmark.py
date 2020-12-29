@@ -1,19 +1,31 @@
-from GradeGrab import driver, crowd_link, crowd_course
+from Creds import crowd_link, crowd_course
+
+# Import variables
+import selenium
+from selenium.webdriver.common.by import By  # For wait until find 'by' condition
+from selenium.webdriver.support.ui import WebDriverWait  # Wait condition
+from selenium.webdriver.support import expected_conditions as ec
 
 
 # Crowdmark function
-def crowd():
+class Crowdmark:
+    def __init__(self, course):
+        self.driver = selenium.webdriver.Chrome(options=options)
+        self.course = course
+        self.t_data = []
+        self.mod = 2
+
     # Changes grade column index for crowdmark tests
-    def crowd_test(table, mod):  # Mod is modulus
+    def crowd_test(self):  # Mod is modulus
 
         crowd_percent = []
         ass_crowd = 0  # Number of assignments
 
-        for g in table:  # Changes to text
+        for g in self.t_data:  # Changes to text
             g = g.text
             ass_crowd += 1
 
-            if ass_crowd % mod == 0:  # Returns 4th column
+            if ass_crowd % self.mod == 0:  # Returns 4th column
                 if g != '' and g != '   ^`^t':
                     g_per = g.split("%")  # Removes percent sign
                     crowd_percent.append(g_per[0])
@@ -23,9 +35,9 @@ def crowd():
         return crowd_percent
 
     # Change for course.
-    def crowd_change(course):
+    def crowd_change(self):
         # direct link for faster operation
-        driver.get(crowd_link + course)
+        self.driver.get(crowd_link + self.course)
         WebDriverWait(driver, 10).until(g_load)
 
         # Local Variables
@@ -38,7 +50,7 @@ def crowd():
         if len(tables) == 1:  # Gos directly to assignments if no tests
             data_val = 4
             table_data = tables[0].find_elements_by_tag_name('td')
-            table_percent = crowd_test(table_data, data_val)
+            table_percent = self.crowd_test()
 
         else:
             for table_id in tables:  # Looks for table data in each table
@@ -53,7 +65,7 @@ def crowd():
                     data_val = 4
 
                 # Gets percent from tests then percent from assignments
-                crowd_per = crowd_test(table_data, data_val)
+                crowd_per = self.crowd_test()
                 table_percent += crowd_per
 
         return table_percent
@@ -73,3 +85,4 @@ def crowd():
         # Reveres Crowdmark's stupid ordering and appends to percent dict
         percent_crowd.reverse()
         dict_percent[cc] = percent_crowd
+

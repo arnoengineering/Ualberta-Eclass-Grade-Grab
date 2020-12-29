@@ -1,7 +1,6 @@
 # coding: utf-8
 # Removes log file and sends old file if errors
-from GradeGrab import log_name, web_link, user, receivers, password, \
-    changed_course, course_id, attachment, e_sub
+from Creds import *
 
 
 import smtplib

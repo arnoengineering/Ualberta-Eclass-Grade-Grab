@@ -1,6 +1,6 @@
 import pandas as pd
 from pandas.errors import EmptyDataError
-from GradeGrab import csv_file, dict_percent
+from GradeGrab import csv_file
 
 
 def grab_g():
@@ -12,6 +12,6 @@ def grab_g():
     return grade_dict
 
 
-def write_grade():
+def write_grade(dict_percent):
     df = pd.DataFrame.from_dict(dict_percent, orient='index')
     df.to_csv(csv_file, header=True, index=True)
