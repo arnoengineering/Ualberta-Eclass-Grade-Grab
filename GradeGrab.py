@@ -14,16 +14,17 @@ from selenium.webdriver.chrome.options import Options
 import math
 import os
 import sys
+
+os.chdir(os.path.dirname(sys.argv[0]))
+
 from datetime import date
 from GradeGrabMod import *
 import logging
 
-# todo rem total; find el; json; order var, update linux, file-path
+# order var, update linux, file-path
 
 # Global Variables
 # locations
-os.chdir(os.path.dirname(sys.argv[0]))
-
 
 # initialize the log settings
 logging.basicConfig(filename=log_name, level=logging.INFO)
@@ -69,7 +70,7 @@ def loop_eclass():
     driver.find_element_by_id('user_pass').send_keys(psw)
     driver.find_element_by_xpath('/html/body/div/div/div/div/div/form/input[3]').click()
     # Tests if eclass loads
-    eclass_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, "Dashboard"))  # todo find
+    eclass_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, 'eClass'))
     WebDriverWait(driver, 10).until(eclass_load)  # 10 sec max
 
     # Calls functions for chancing course, and getting dict_percent for each course.
@@ -91,10 +92,8 @@ def loop_eclass():
             # will send message block at end
             if c in old_percent.keys():
                 course.get_old_percent()  # Calls up old dict_percent
-                course.any_updates()  # True/false for each course
 
-            else:
-                changed_course[c] = []
+            course.any_updates()  # True/false for each course
 
         except ValueError as er:
             logging.exception("error calc" + str(er))
@@ -107,14 +106,15 @@ def loop_eclass():
 # grades per course
 class CourseGrades:
     def __init__(self, co, driver):
-        self.driver = driver
         self.ass_names = []
         self.grade = []
         self.possible = []
         self.percent = []
+        self.old_g_ls = []
+
         self.mod = 2
         self.course = co
-        self.old_g_ls = []
+        self.driver = driver
 
     # Removes redundant dict_percent for specific courses.
     def format_course(self):
@@ -272,10 +272,10 @@ class CourseGrades:
 
                     if self.grade[i] == not_marked_yet or self.grade[i] == not_marked or old_grades[i] == not_marked:
                         cent = ''  # Corrects grammar: no % if not marked
-                    output_str = "Assignment: {}, Old percentage: {}, New percentage: {}{}".format(str(i + 1),
-                                                                                                   old_grades[i],
-                                                                                                   self.grade[i],
-                                                                                                   cent)
+                    output_str = "Changed: {}, Old percentage: {}, New percentage: {}{}".format(self.ass_names[i],
+                                                                                                old_grades[i],
+                                                                                                self.grade[i],
+                                                                                                cent)
                     if self.course in changed_course.keys():
                         changed_course[self.course].append(output_str)
                     else:
@@ -283,14 +283,15 @@ class CourseGrades:
 
         # They are guaranteed different. Thus print all new indexes
         else:
-            # is_same = False
             # Prints the indexes that were not on old index
             dif_len = len(self.grade) - len(old_grades)
 
             for i in range(dif_len):
 
                 up_in = i + len(old_grades)  # index for new grade
-                output_str = "Assignment: {}, New percentage: {}{}".format(str(up_in), self.grade[up_in], cent)
+                if self.grade[up_in] == not_marked_yet or self.grade[up_in] == not_marked:
+                    cent = ''
+                output_str = "Changed: {}, New percentage: {}{}".format(self.ass_names[up_in], self.grade[up_in], cent)
 
                 if self.course in changed_course.keys():
                     changed_course[self.course].append(output_str)
@@ -301,7 +302,7 @@ class CourseGrades:
 # main execution
 LogCSV.grab_g()
 try:
-    loop_eclass()  # todo sub
+    loop_eclass()  # loops though eclass then crowd
     loop_crowd()
 except Exception as e:
     logging.exception("Error in open web: " + str(e))
