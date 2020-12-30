@@ -2,8 +2,6 @@
 # Script that goes onto eclass and crowdmark.
 # Then Checks vs old data, and saves to excel
 # This Script test if web can go direct to each grade id, bypassing the need for stupid grade click.
-# Less need to change
-# Maybe add percent sign after alignments
 
 # Import variables
 import selenium
@@ -38,7 +36,6 @@ options.headless = True
 
 weekday = date.today().weekday()  # gets current date to clear log
 sub = e_sub
-c_l = list(course_id.values())
 
 
 def loop_crowd():
@@ -67,22 +64,21 @@ def loop_eclass():
     driver = selenium.webdriver.Chrome(options=options)
     # Logging on
     print('Getting Web Data')
-    driver.get(web_link + c_l[0])
+    driver.get(de_link)
     driver.find_element_by_id('username').send_keys(usr)
     driver.find_element_by_id('user_pass').send_keys(psw)
     driver.find_element_by_xpath('/html/body/div/div/div/div/div/form/input[3]').click()
     # Tests if eclass loads
-    eclass_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, "Dashboard"))
+    eclass_load = ec.presence_of_element_located((By.PARTIAL_LINK_TEXT, "Dashboard"))  # todo find
     WebDriverWait(driver, 10).until(eclass_load)  # 10 sec max
 
     # Calls functions for chancing course, and getting dict_percent for each course.
     for c in course_id.keys():
         logging.info('class ' + c)
         try:
-            if course_id[c] != c_l[0]:  # Since first link
 
-                g_link = web_link + course_id[c]
-                driver.get(g_link)  # Switch courses
+            g_link = web_link + course_id[c]
+            driver.get(g_link)  # Switch courses
 
             # Saves output as local variable
             course = CourseGrades(c, driver)
