@@ -17,13 +17,10 @@ import math
 import os
 import sys
 from datetime import date
-from Creds import *
-from LogClear import email
-from Crowdmark import Crowdmark
-import Log
+from GradeGrabMod import *
 import logging
 
-# todo rem total; find el; json; order var, update linux
+# todo rem total; find el; json; order var, update linux, file-path
 
 # Global Variables
 # locations
@@ -306,7 +303,7 @@ class CourseGrades:
 
 
 # main execution
-Log.grab_g()
+LogCSV.grab_g()
 try:
     loop_eclass()  # todo sub
     loop_crowd()
@@ -315,7 +312,7 @@ except Exception as e:
     was_error = True
 
 try:
-    Log.write_grade(dict_percent)
+    LogCSV.write_grade(dict_percent)
 except IOError as e:
     logging.exception("Error in csv: " + str(e))
     was_error = True

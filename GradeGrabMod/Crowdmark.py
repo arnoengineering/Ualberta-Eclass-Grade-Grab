@@ -1,4 +1,4 @@
-from Creds import not_marked_yet
+from GradeGrabMod.Creds import not_marked_yet
 
 # Import variables
 from selenium.webdriver.support.ui import WebDriverWait  # Wait condition
