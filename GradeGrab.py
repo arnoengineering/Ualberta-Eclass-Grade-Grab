@@ -41,7 +41,7 @@ sub = e_sub
 
 def loop_crowd():
     # Element locators for wait function
-    driver = selenium.webdriver.Chrome(options=options)  # todo add headers, run so adds to up
+    driver = selenium.webdriver.Chrome(options=options)  # todo add headers
     # crowdmark loading
     driver.get('https://app.crowdmark.com/sign-in')
     driver.find_element_by_id('user_email').send_keys(c_usr)
