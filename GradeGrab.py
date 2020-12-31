@@ -21,11 +21,6 @@ from datetime import date
 from GradeGrabMod import *
 import logging
 
-# order var, update linux, file-path
-
-# Global Variables
-# locations
-
 # initialize the log settings
 logging.basicConfig(filename=log_name, level=logging.INFO)
 was_error = False  # any errors
