@@ -3,20 +3,22 @@
 
 
 ## Add Classes
-Imput your class names and id in the dictionaries in *GradeGrab.py*. Last year I had some courses on crowdmark, so I left the option and dicts in there.
-For eclass, the id is the last 6 digits of the URL: https:<span>//eclass.srv.ualberta.ca</span>/course/view.php?id=<ins>62226</ins> 
+Input your class names and id in the dictionaries in *GradeGrabMod/Creds.py*. Last year I had some courses on crowdmark, 
+so I left the option and dicts in there. For eclass, the id is the last 6 digits of the URL: 
+https:<span>//eclass.srv.ualberta.ca</span>/course/view.php?id=<ins>62226</ins> 
 
-To send the email, I used the *smtplib* module with google api. Thus, the sending email works better with 2 factor authentcation (and an api key).
+To send the email, I used the *smtplib* module with google api. Thus, the sending email works better with 2 factor authentication (and an api key).
 [Create App Key](https://support.google.com/accounts/answer/185833?hl=en&authuser=0)
 
 
 ## Replace info in 'UserInfo.txt' 
-copy file: remove'.example' from file name and replace all non comments with your respective usernames and passwords. The email pasword is the api *app password* in the above step.
+copy file: remove'.example' from file name and replace all non comments with your respective usernames and passwords. 
+The email password is the api *app password* in the above step.
 
 
 # Info
 ## Dependancys
-This program has a few dependancies
+This program has a few dependencies
 
 - Anaconda
     - Pandas
@@ -40,22 +42,26 @@ pip install pycurl
 ```
 
 
+### Module
+Recently change the file into multiple smaller docs. Thus *Creds.py* is new file with most of the global variables.
+
+ 
 ### Chromedriver
-Issues arise with chromedriver ocassionaly, please make sure chrome and chromedriver are at the same versions. 
+Issues arise with chromedriver occasionally, please make sure chrome and chromedriver are at the same versions. 
 
 **To download on linux:**
 *UpdateChrome* is a script that allows for automatic updates once run.
 
 If you would like to do this manually:
-- Download latest chrome: [detailed explaination](https://linuxize.com/post/how-to-install-google-chrome-web-browser-on-ubuntu-18-04/)
+- Download latest chrome: [detailed explanation](https://linuxize.com/post/how-to-install-google-chrome-web-browser-on-ubuntu-18-04/)
 ```
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install ./google-chrome-stable_current_amd64.deb
 ```
-- Download latest chromedriver: [detailed explaination](https://tecadmin.net/setup-selenium-chromedriver-on-ubuntu/)
+- Download latest chromedriver: [detailed explanation](https://tecadmin.net/setup-selenium-chromedriver-on-ubuntu/)
 
 To get version:`curl https://chromedriver.storage.googleapis.com/LATEST_RELEASE`
-then run, replaceing *version* with the version returened by previous.
+then run, replacing *version* with the version returned by previous.
 ```
 wget https://chromedriver.storage.googleapis.com/version/chromedriver_linux64.zip
 unzip chromedriver_linux64.zip
@@ -65,7 +71,7 @@ sudo chmod +x /usr/bin/chromedriver
 ```
 
 
-## Optional (but recomended)
+## Optional (but recommended)
 ### Crontab
 you might want to run with crontab.
 To run main program 3 times/day and the program to check error file once per week.
